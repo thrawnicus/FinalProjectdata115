@@ -51,8 +51,13 @@ Is the analysis thorough and logically conducted?
 
 5.) Describe how you selected the methodology for your analysis of the big question and the pros and cons of that method and any alternative methods you considered.
 
+    The methodology for my analysis was cluster analysis
+    
 6.) Describe your final conclusions based on your analysis and support them with analytics on your dataset.
 
 7.) Describe any additional analyses that you would have liked to carry out and any additional data that would have been needed in order to extend your analysis.
   
-   One issue that I ran into is that the data was not linear related so I would like to do a non linear analysis to build a model.
+    One issue that I ran into is that the data was not linear related so I would like to do a non linear analysis to build a model. 
+    More data would also be need to be able to draw meaningful conclusions, one instance of this would be a population dataset to be 
+    able to see the effect of masks on infection rate. I also have a feeling that modeling infection rates can get very complicated 
+    using epidimilogical models, making this a suituation that I dont know what I dont know.
