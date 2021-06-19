@@ -34,18 +34,20 @@ Is the analysis thorough and logically conducted?
     deaths and cases for every county in the US.  The other dataset that I am using is a survey of mask use that was done 
     in June 2020. I wanted to limit the data that I was using in the cases and deaths dataset to a timeframe that was close 
     to the time that the survey was taken.  Another issue was merging the two datasets so that the mask survey data was with 
-   the cases and deaths dataset.
+    the cases and deaths dataset.
 
 3.) Describe your ‘Big Question’ and why the data is a good choice to answer it.
 
     The ‘Big Question’ that I chose was to see how mask use impacted death rates in the US.  The reason that this is a good dataset 
-    for answering this question is it     contains all of the cases and deaths in the US.  There is also a dataset that has a survey 
-    for how likely someone is to wear a mask.
+    for answering this question is it contains all of the cases and deaths in the US.  There is also a dataset that has a survey 
+    for how likely someone is to wear a mask. 
 
 
 4.) Describe the results of your exploratory analysis and what preliminary conclusions you were able to draw based on this analysis.
-               
-
+                 
+    The results of my exploratory analysis was a little lackluster.  It was at this point that I realized that a lot more data was 
+    going to be need to reach the conclusions that I wasnted to reach. For instance a population dataset would be needed to see the
+    impact of masks on infection rate. 
 
 5.) Describe how you selected the methodology for your analysis of the big question and the pros and cons of that method and any alternative methods you considered.
 
