@@ -1,0 +1,281 @@
+---
+title: "Eric Holberg 115 Final Project 2021"
+author: "Eric Holberg"
+date: "6/14/2021"
+output: pdf_document
+---
+
+
+* Big Question: Is the question interesting, clearly stated, and specific? Is the chosen dataset a reasonable option for 
+addressing this question?
+
+* Visualizations: Are the visualizations used to represent the analysis effictive and complete?
+
+* Analysis: Are the methods that we used to analyze the data appropriate and carried out correctly?
+Is the analysis thorough and logically conducted?
+
+* Conclusions: Do the final conclusions provide a satisfactory answer to the ‘Big Question’ ?  Are the conclusions supported by the analysis that was performed and presented?
+
+* Reproducibility:Are the data processing and cleaning methods well-documented?  Is the code usedto analyze the data correct and easily interpretable?
+
+* Presentation:Is the final report well organized and neat? Are the plots designed with care, includingcolor choices, appropriate labelling, and other aspects of good visualization design?
+
+
+## Describe the dataset and why you selected it for this project.
+
+
+## Describe any processing problems you identified with the data and how you overcame those issues.
+
+
+* Describe your ‘Big Question’ and why the data is a good choice to answer it.
+
+
+* Describe the results of your exploratory analysis and what preliminary conclusions you were able todraw based on this analysis.
+
+* Describe how you selected the methodology for your analysis of the big question and the pros and consof that method and any alternative methods you considered.
+
+* Describe your final conclusions based on your analysis and support them with analytics on your dataset.
+
+* Describe any additional analyses that you would have liked to carry out and any additional data thatwould have been needed in order to extend your analysis.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages}
+
+library("ggplot2", "pdflatex")
+library("cluster")
+
+require(ggplot2)
+require(GGally)
+require(gridExtra)
+require(tidyr)
+require(Rmisc)
+require(corrplot)
+require(lubridate)
+require(tibble)
+require(readr)
+require(data.table)
+require(factoextra)
+require(usmap)
+require(dplyr)
+
+```
+
+```{r Final Project Load Data}
+
+county_deaths <-read.csv("us_county_deaths1.csv")
+
+mask_use <- read.csv("mask_use.csv")
+
+
+```
+
+
+
+```{r Final Project }
+
+maskdeath <- county_deaths
+names(mask_use)[1] <- "fips"
+names(maskdeath)[1]<- "date"
+
+maskdeath <- merge(maskdeath, mask_use, by.x = c("fips"), by.y = c("fips"))
+
+maskdeath$date <- as.Date(maskdeath$date, format = "%m/%d/%Y")
+
+```
+
+
+
+```{r Filter Data}
+#For ease of changing the dates in the future
+date.begin <- "2020-05-01"
+date.end <- "2020-07-31"
+
+maskdeath <- maskdeath %>% 
+  select(fips, date, county, state, cases, deaths, NEVER, RARELY, SOMETIMES, FREQUENTLY, ALWAYS) %>%
+  filter(date >= date.begin & date <= date.end)
+
+maskdeath <-maskdeath[order(maskdeath$fips, maskdeath$date),]
+
+#Narrow results to WA based on fips
+maskdeath <- maskdeath %>% 
+  select(fips, date, county, state, cases, deaths, NEVER, RARELY, SOMETIMES, FREQUENTLY, ALWAYS) %>%
+  dplyr::filter(fips >= "5300" & fips <= "5399")
+
+wamaskuse <- mask_use %>% 
+  select_all() %>%
+  dplyr::filter(fips >= "5300" & fips <= "5399")
+
+
+
+```
+
+
+```{r add columns}
+
+#This creates a deaths per day column
+maskdeath <- maskdeath %>% dplyr::group_by(fips) %>% dplyr::mutate(deaths.day = deaths- lag(deaths)) 
+
+maskdeath <- maskdeath %>% dplyr::group_by(fips) %>% dplyr::mutate(cases.day = cases - lag(cases))
+#Gets rid of NA values
+maskdeath <- maskdeath %>% mutate_if(is.numeric, replace_na, 0)
+
+#Creates a column that is a cummulative column of deaths per day
+maskdeath <- maskdeath %>% dplyr::group_by(fips) %>% dplyr::mutate(cdeath = cumsum(deaths.day)) 
+
+maskdeath <- maskdeath %>% dplyr::group_by(fips) %>% dplyr::mutate(ccases = cumsum(cases.day))
+
+#Create a column that is a death per case
+maskdeath <- maskdeath %>% dplyr::group_by(fips) %>% dplyr::mutate(deaths.per.case = round(cdeath / ccases, digits = 3))
+
+#Make sure the NaN and infinite values are 0 so they dont interfere with calculations
+maskdeath$deaths.per.case[is.nan(maskdeath$deaths.per.case)] <- 0
+maskdeath$deaths.per.case[is.infinite(maskdeath$deaths.per.case)] <- 0
+  
+maskdeath %>% dplyr::ungroup(fips)
+
+#filter the data 
+wadeathc <- maskdeath %>% 
+  select_all %>%
+  dplyr::filter(date == date.end)
+
+```
+
+```{r write csv}
+
+write.csv(maskdeath, "maskdeath13")
+
+```
+
+
+```{r EDA Graphs}
+
+#
+ggplot(wadeathc, aes(cdeath)) +
+  geom_boxplot(outlier.colour="#981e32", outlier.shape=8,outlier.size=4)+
+  labs(title="Boxplot of Washington Deaths", subtitle = "between 5/1/2020 to 7/31/2020", x="Deaths ")
+
+ggplot(wadeathc, aes(deaths.per.case))+
+  geom_histogram()+
+  labs(title = "Histogram of Deaths per Case", subtitle = "Washington 5/1/2020 to 7/31/2020",
+       x = "Deaths per Case")
+
+p1 <- ggplot(maskdeath, aes(date, deaths))+
+    geom_point()
+
+p2 <- ggplot(maskdeath, aes(deaths.per.case))+
+  geom_bar()
+
+p3 <- ggplot(maskdeath, aes(date, deaths.per.case, color = ALWAYS))+
+  geom_point()
+
+p4 <- ggplot(maskdeath, aes(date, deaths.per.case, color = FREQUENTLY))+
+  geom_point()
+
+
+p5 <-ggplot(maskdeath, aes(date, deaths.per.case, color = SOMETIMES))+
+  geom_point()
+
+p6 <-ggplot(maskdeath, aes(date, deaths.per.case, color = RARELY))+
+  geom_point()
+
+p7 <-ggplot(maskdeath, aes(date, deaths.per.case, color = NEVER))+
+  geom_point()
+
+p8 <-ggplot(maskdeath, aes(date, deaths.per.case, color = fips))+
+  geom_point()
+pairs(wadeathc[12:16])
+pairs(wadeathc[7:14])
+p1
+p2
+grid.arrange(p3,p4,p5,p6,p7, ncol=2)
+ 
+
+
+```
+```{r Stacked Bar chart}
+
+wamask<- wamaskuse %>% gather(Response, Percentage, NEVER:ALWAYS)
+# Transform this data in %
+wamask$Percentage <- wamask$Percentage * 100
+
+
+
+response.order <- c("ALWAYS", "FREQUENTLY","SOMETIMES","RARELY","NEVER")
+
+ggplot(wamask, aes(x = fips, y = Percentage))+
+  geom_col(aes(fill = Response))+
+  scale_fill_discrete(breaks = response.order)
+
+ 
+
+```
+
+```{r K means clustering}
+#Remove non-numerics for cluster analysis
+
+
+set.seed(54)
+clusterD <- wadeathc[-1:-4]
+cluster.wadeathc <- kmeans(clusterD,2,nstart = 50)
+cluster.wadeathc
+table(cluster.wadeathc$cluster, )
+
+cluster.iris$cluster <- as.factor(cluster.iris$cluster)
+
+ggplot(iris, aes(Petal.Length, Petal.Width, color=cluster.iris$cluster)) + 
+  geom_point() + 
+  ggtitle("TechVidvan iris cluster plot")
+
+# fviz_nbclust(clusterD, kmeans, method = "wss") +
+#     geom_vline(xintercept = 2, linetype = 2)+
+#   labs(subtitle = "Elbow method")
+# 
+# fviz_nbclust(clusterD, kmeans, method = "silhouette") +
+#     geom_vline(xintercept = 2, linetype = 2)+
+#   labs(subtitle = "Silhouette method")
+# 
+# kresults <- kmeans(clusterD, center=2, nstart = 50)
+# 
+# fviz_cluster(kresults, clusterD, geom = c("point"),ellipse.type = "norm")
+
+```
+
+```{r Linear first fit}
+
+mlinear <- lm(deaths.per.case ~ ALWAYS + FREQUENTLY + SOMETIMES + RARELY + NEVER, maskdeath)
+summary(mlinear)
+
+
+par(mfrow=c(2,2))
+plot(mlinear)
+
+
+```
+
+
+```{r Map Plots}
+
+usmap::plot_usmap(data = wadeathc, values = "cdeath", "counties", include = c("WA"), color = "black")+
+  scale_fill_continuous(low = "white", high = "red", name = "Deaths Wa", label = scales::comma) +
+  labs(title = "Washington COVID-19 Deaths", subtitle = "5/1/2020 - 7/31/2020") +
+  theme(legend.position = "right")
+
+usmap::plot_usmap(data = wadeathc, values = "ALWAYS", "counties", include = c("WA"), color = "black")+
+  scale_fill_continuous(low = "white", high = "blue", name = "Mask Use", label = scales::comma) +
+  labs(title = "Washington COVID-19 Mask Use", subtitle = "Survey from June 2020") +
+  theme(legend.position = "right")
+
+usmap::plot_usmap(data = wadeathc, values = "SOMETIMES", "counties", include = c("WA"), color = "black")+
+  scale_fill_continuous(low = "white", high = "orange", name = "Mask Use", label = scales::comma) +
+  labs(title = "Washington COVID-19 Mask Use", subtitle = "Survey from June 2020") +
+  theme(legend.position = "right")
+
+usmap::plot_usmap(data = wadeathc, values = "deaths.per.case", "counties", include = c("WA"), color = "black")+
+  scale_fill_continuous(low = "green", high = "red", name = "Mask Use", label = scales::comma) +
+  labs(title = "Washington COVID-19 Deaths per Case", subtitle = "From 5/1/2020 to 7/31/2020") +
+  theme(legend.position = "right")
+               
+```
