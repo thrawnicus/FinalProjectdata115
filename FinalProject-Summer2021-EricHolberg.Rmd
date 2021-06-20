@@ -3,40 +3,85 @@ title: "Eric Holberg 115 Final Project 2021"
 author: "Eric Holberg"
 date: "6/14/2021"
 output: pdf_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
+**1.) Describe the dataset and why you selected it for this project.**
 
-* Big Question: Is the question interesting, clearly stated, and specific? Is the chosen dataset a reasonable option for 
-addressing this question?
+-   The dataset that I choose was the COVID-19 dataset. I wanted to do
+    this dataset because it has had a huge impact on the world. The
+    functioning of our society has changed dramatically during this
+    pandemic. Looking into the data that we had on COVID-19 seemed like
+    it would be interesting and provide me with greater understanding of
+    what the world has gone through.
 
-* Visualizations: Are the visualizations used to represent the analysis effictive and complete?
+**2.) Describe any processing problems you identified with the data and
+how you overcame those issues.**
 
-* Analysis: Are the methods that we used to analyze the data appropriate and carried out correctly?
-Is the analysis thorough and logically conducted?
+-   One of the issues that I ran into was that all of the data was
+    cumulative for one of the datasets that contained deaths and cases
+    for every county in the US. The other dataset that I am using is a
+    survey of mask use that was done in June 2020. I wanted to limit the
+    data that I was using in the cases and deaths dataset to a time
+    frame that was close to the time that the survey was taken. Another
+    issue was merging the two datasets so that the mask survey data was
+    with the cases and deaths dataset.
 
-* Conclusions: Do the final conclusions provide a satisfactory answer to the ‘Big Question’ ?  Are the conclusions supported by the analysis that was performed and presented?
+**3.) Describe your 'Big Question' and why the data is a good choice to
+answer it.**
 
-* Reproducibility:Are the data processing and cleaning methods well-documented?  Is the code usedto analyze the data correct and easily interpretable?
+-   The 'Big Question' that I chose was to see how mask use impacted
+    death rates in the US. The reason that this is a good dataset for
+    answering this question is it contains all of the cases and deaths
+    in the US. There is also a dataset that has a survey for how likely
+    someone is to wear a mask.
 
-* Presentation:Is the final report well organized and neat? Are the plots designed with care, includingcolor choices, appropriate labelling, and other aspects of good visualization design?
+**4.) Describe the results of your exploratory analysis and what
+preliminary conclusions you were able to draw based on this analysis.**
 
+-   The results of my exploratory analysis was a little lackluster. It
+    was at this point that I realized that a lot more data was going to
+    be need to reach the conclusions that I wanted to reach. For
+    instance a population dataset would be needed to see the impact of
+    masks on infection rate.
 
-## Describe the dataset and why you selected it for this project.
+**5.) Describe how you selected the methodology for your analysis of the
+big question and the pros and cons of that method and any alternative
+methods you considered.**
 
+-   The methodology for my analysis was cluster analysis. The analysis
+    was able to show that the data was grouped into two clusters. The
+    survey results and the death and case results. There was no linear
+    relationship between these two variables. This was a classification
+    problem as half of the data was a survey.
 
-## Describe any processing problems you identified with the data and how you overcame those issues.
+**6.) Describe your final conclusions based on your analysis and support
+them with analytics on your dataset.**
 
+-   Unfortunately the conclusion that I reached was that to make
+    meaningful prediction for this I would need to use a non-linear
+    analysis which is beyond my current skill set. Another conclusion
+    that i reached was that more data would be needed. A population
+    dataset would be essential to make limited predictions. More data
+    about population density and transmissibility would also be needed.
+    It is clear to me that these relationships exist even from my
+    limited analysis. Take the map plots of deaths per case and total
+    deaths. King county where the highest number of deaths occurred was
+    not the highest death per case. With more data these relationships
+    could be explored.
 
-* Describe your ‘Big Question’ and why the data is a good choice to answer it.
+**7.) Describe any additional analyses that you would have liked to
+carry out and any additional data that would have been needed in order
+to extend your analysis.**
 
-
-* Describe the results of your exploratory analysis and what preliminary conclusions you were able todraw based on this analysis.
-
-* Describe how you selected the methodology for your analysis of the big question and the pros and consof that method and any alternative methods you considered.
-
-* Describe your final conclusions based on your analysis and support them with analytics on your dataset.
-
-* Describe any additional analyses that you would have liked to carry out and any additional data thatwould have been needed in order to extend your analysis.
+-   One issue that I ran into is that the data was not linear related so
+    I would like to do a non linear analysis to build a model. More data
+    would also be need to be able to draw meaningful conclusions, one
+    instance of this would be a population dataset to be able to see the
+    effect of masks on infection rate. I know that modeling infection
+    rates can get very complicated using epidemiological models.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -72,21 +117,26 @@ mask_use <- read.csv("mask_use.csv")
 
 ```
 
-
-
 ```{r Final Project }
 
 maskdeath <- county_deaths
+#rename variables
 names(mask_use)[1] <- "fips"
 names(maskdeath)[1]<- "date"
-
+#combine the datasets that i wanted to use
 maskdeath <- merge(maskdeath, mask_use, by.x = c("fips"), by.y = c("fips"))
-
+#format the dates to be more useful
 maskdeath$date <- as.Date(maskdeath$date, format = "%m/%d/%Y")
 
 ```
 
-
+-   One of the issues that I struggled with was where to limit my data.
+    Both CSV's are for every county in the US and the us_counties.csv
+    has data from the beginning of the pandemic to now. I chose to limit
+    the data to Washington and to the dates that were a month before and
+    after when the mask survey was done. The dates were chosen because
+    that is when I thought that peoples responses to the survey would
+    closely match reality.
 
 ```{r Filter Data}
 #For ease of changing the dates in the future
@@ -94,14 +144,16 @@ date.begin <- "2020-05-01"
 date.end <- "2020-07-31"
 
 maskdeath <- maskdeath %>% 
-  select(fips, date, county, state, cases, deaths, NEVER, RARELY, SOMETIMES, FREQUENTLY, ALWAYS) %>%
+  select(fips, date, county, state, cases, deaths, NEVER, RARELY, SOMETIMES, 
+         FREQUENTLY, ALWAYS) %>%
   filter(date >= date.begin & date <= date.end)
 
 maskdeath <-maskdeath[order(maskdeath$fips, maskdeath$date),]
 
 #Narrow results to WA based on fips
 maskdeath <- maskdeath %>% 
-  select(fips, date, county, state, cases, deaths, NEVER, RARELY, SOMETIMES, FREQUENTLY, ALWAYS) %>%
+  select(fips, date, county, state, cases, deaths, NEVER, RARELY, SOMETIMES, 
+         FREQUENTLY, ALWAYS) %>%
   dplyr::filter(fips >= "5300" & fips <= "5399")
 
 wamaskuse <- mask_use %>% 
@@ -112,31 +164,42 @@ wamaskuse <- mask_use %>%
 
 ```
 
+-   Adding columns that showed breakdowns of variables per day and
+    cumulative for the time period needed to be done to accurately draw
+    conclusions. The deaths column was cumulative from the beginning of
+    the pandemic, as was cases.
 
 ```{r add columns}
 
 #This creates a deaths per day column
-maskdeath <- maskdeath %>% dplyr::group_by(fips) %>% dplyr::mutate(deaths.day = deaths- lag(deaths)) 
+maskdeath <- maskdeath %>% dplyr::group_by(fips) %>% 
+  dplyr::mutate(deaths.day = deaths- lag(deaths)) 
 
-maskdeath <- maskdeath %>% dplyr::group_by(fips) %>% dplyr::mutate(cases.day = cases - lag(cases))
+maskdeath <- maskdeath %>% dplyr::group_by(fips) %>% 
+  dplyr::mutate(cases.day = cases - lag(cases))
 #Gets rid of NA values
 maskdeath <- maskdeath %>% mutate_if(is.numeric, replace_na, 0)
 
-#Creates a column that is a cummulative column of deaths per day
-maskdeath <- maskdeath %>% dplyr::group_by(fips) %>% dplyr::mutate(cdeath = cumsum(deaths.day)) 
+#Creates a column that is a cumulative column of deaths per day
+maskdeath <- maskdeath %>% dplyr::group_by(fips) %>% 
+  dplyr::mutate(cdeath = cumsum(deaths.day)) 
 
-maskdeath <- maskdeath %>% dplyr::group_by(fips) %>% dplyr::mutate(ccases = cumsum(cases.day))
+maskdeath <- maskdeath %>% dplyr::group_by(fips) %>% 
+  dplyr::mutate(ccases = cumsum(cases.day))
 
 #Create a column that is a death per case
-maskdeath <- maskdeath %>% dplyr::group_by(fips) %>% dplyr::mutate(deaths.per.case = round(cdeath / ccases, digits = 3))
+maskdeath <- maskdeath %>% dplyr::group_by(fips) %>% 
+  dplyr::mutate(deaths.per.case = round(cdeath / ccases, digits = 3))
 
-#Make sure the NaN and infinite values are 0 so they dont interfere with calculations
+#Make sure the NaN and infinite values are 0 so they don't 
+#interfere with calculations
 maskdeath$deaths.per.case[is.nan(maskdeath$deaths.per.case)] <- 0
 maskdeath$deaths.per.case[is.infinite(maskdeath$deaths.per.case)] <- 0
   
 maskdeath %>% dplyr::ungroup(fips)
 
-#filter the data 
+#Create a "Summary" of the dates so the cumulatives of the variables would be 
+#available without using the entire dataset 
 wadeathc <- maskdeath %>% 
   select_all %>%
   dplyr::filter(date == date.end)
@@ -149,24 +212,39 @@ write.csv(maskdeath, "maskdeath13")
 
 ```
 
+-   I really wanted to find a relationship between this data. A boxplot
+    of the deaths showed that most of the deaths were contained in a
+    narrow band with outliers on the high end. Elimination of those
+    outliers didn't make sense in this case because they were really the
+    interesting data points. A histogram of the deaths per case to see
+    what kind of distribution there was, which turned out to be skewed
+    right. The barpot shows that the there are negitive death values that 
+    are deaths that got reclassified to another cause of death.I then used 
+    the pairs plot to see if there was any relationships that I didn't think 
+    to do and I didn't see anything that jumped out at me.
 
 ```{r EDA Graphs}
 
-#
+
 ggplot(wadeathc, aes(cdeath)) +
   geom_boxplot(outlier.colour="#981e32", outlier.shape=8,outlier.size=4)+
-  labs(title="Boxplot of Washington Deaths", subtitle = "between 5/1/2020 to 7/31/2020", x="Deaths ")
+  labs(title="Boxplot of Washington Deaths", 
+       subtitle = "between 5/1/2020 to 7/31/2020", x="Deaths ")
 
 ggplot(wadeathc, aes(deaths.per.case))+
-  geom_histogram()+
-  labs(title = "Histogram of Deaths per Case", subtitle = "Washington 5/1/2020 to 7/31/2020",
-       x = "Deaths per Case")
+  geom_histogram(bins = 15)+
+  labs(title = "Histogram of Deaths per Case", 
+       subtitle = "Washington 5/1/2020 to 7/31/2020",x = "Deaths per Case")
 
 p1 <- ggplot(maskdeath, aes(date, deaths))+
-    geom_point()
+    geom_point(color = "orange")+
+    labs(title="Scatterplot of Washington Deaths", 
+       subtitle = "between 5/1/2020 to 7/31/2020", x="Date", y="Deaths")
+    
 
-p2 <- ggplot(maskdeath, aes(deaths.per.case))+
-  geom_bar()
+p2 <- ggplot(maskdeath, aes(deaths.day))+
+  geom_bar()+
+  labs(title = "Barplot of Deaths per Day", x = "Deaths per Day")
 
 p3 <- ggplot(maskdeath, aes(date, deaths.per.case, color = ALWAYS))+
   geom_point()
@@ -195,6 +273,10 @@ grid.arrange(p3,p4,p5,p6,p7, ncol=2)
 
 
 ```
+
+-   The stacked bar chart shows the responses for the mask survey based
+    upon fips codes
+
 ```{r Stacked Bar chart}
 
 wamask<- wamaskuse %>% gather(Response, Percentage, NEVER:ALWAYS)
@@ -207,45 +289,63 @@ response.order <- c("ALWAYS", "FREQUENTLY","SOMETIMES","RARELY","NEVER")
 
 ggplot(wamask, aes(x = fips, y = Percentage))+
   geom_col(aes(fill = Response))+
-  scale_fill_discrete(breaks = response.order)
+  scale_fill_discrete(breaks = response.order)+
+  labs(title = "Mask Survey Responses", subtitle = "June 2020", x = "Fips")
+wamask.1 <- wamask %>%
+  select_all() %>%
+  dplyr::filter(wamask$fips == "53033"| wamask$fips =="53075"| 
+                  wamask$fips =="53037")
+wamask.r <- wamask.1
 
+wamask.r$fips[wamask.r$fips == "53033"] <- "King"
+wamask.r$fips[wamask.r$fips == "53037"] <- "Kittitas"
+wamask.r$fips[wamask.r$fips == "53075"] <- "Whitman"
+
+ggplot(wamask.r, aes(x = fips, y = Percentage))+
+  geom_col(aes(fill = Response))+
+  scale_fill_discrete(breaks = response.order)+
+  labs(title = "Mask Survey Responses", subtitle = "June 2020", x = "WA County")
+  
+  
  
 
 ```
 
-```{r K means clustering}
-#Remove non-numerics for cluster analysis
+-   The cluster analysis shows that the optimum number of clusters
+    should be two. The first cluster is the mask results survey and the
+    second cluster is the cumulative deaths and cumulative cases.
 
+```{r K means clustering}
 
 set.seed(54)
-clusterD <- wadeathc[-1:-4]
-cluster.wadeathc <- kmeans(clusterD,2,nstart = 50)
-cluster.wadeathc
-table(cluster.wadeathc$cluster, )
+#Remove non-numeric for cluster analysis
+clusterD <- maskdeath[c(5:11,14:15)]
+cluster.maskdeath <- kmeans(clusterD,2,nstart = 50)
 
-cluster.iris$cluster <- as.factor(cluster.iris$cluster)
+#Determine the optimum number of clusters
+fviz_nbclust(clusterD, kmeans, method = "wss") +
+    geom_vline(xintercept = 2, linetype = 2)+
+  labs(subtitle = "Elbow method")
 
-ggplot(iris, aes(Petal.Length, Petal.Width, color=cluster.iris$cluster)) + 
-  geom_point() + 
-  ggtitle("TechVidvan iris cluster plot")
+fviz_nbclust(clusterD, kmeans, method = "silhouette") +
+    geom_vline(xintercept = 2, linetype = 2)+
+  labs(subtitle = "Silhouette method")
 
-# fviz_nbclust(clusterD, kmeans, method = "wss") +
-#     geom_vline(xintercept = 2, linetype = 2)+
-#   labs(subtitle = "Elbow method")
-# 
-# fviz_nbclust(clusterD, kmeans, method = "silhouette") +
-#     geom_vline(xintercept = 2, linetype = 2)+
-#   labs(subtitle = "Silhouette method")
-# 
-# kresults <- kmeans(clusterD, center=2, nstart = 50)
-# 
-# fviz_cluster(kresults, clusterD, geom = c("point"),ellipse.type = "norm")
+kresults <- kmeans(clusterD, center=2, nstart = 50)
+str(kresults)
+
+fviz_cluster(kresults, clusterD, geom = c("point"),ellipse.type = "norm")
 
 ```
 
+-   The data that I used did not have a linear relationship. The lack of
+    linearity is shown by the quantile vs quantile plot that should be
+    linear but is non-linear.
+
 ```{r Linear first fit}
 
-mlinear <- lm(deaths.per.case ~ ALWAYS + FREQUENTLY + SOMETIMES + RARELY + NEVER, maskdeath)
+mlinear <- lm(deaths.per.case ~ ALWAYS + FREQUENTLY + SOMETIMES + RARELY + 
+                NEVER, maskdeath)
 summary(mlinear)
 
 
@@ -255,27 +355,43 @@ plot(mlinear)
 
 ```
 
+-   The data in map form as it would be easier to understand. This also
+    allows for geographical relationships to be shown. Even without more
+    data it is clear that some areas were differently effected by the
+    pandemic.
 
 ```{r Map Plots}
 
-usmap::plot_usmap(data = wadeathc, values = "cdeath", "counties", include = c("WA"), color = "black")+
-  scale_fill_continuous(low = "white", high = "red", name = "Deaths Wa", label = scales::comma) +
-  labs(title = "Washington COVID-19 Deaths", subtitle = "5/1/2020 - 7/31/2020") +
+usmap::plot_usmap(data = wadeathc, values = "cdeath", "counties", 
+                  include = c("WA"), color = "black")+
+  scale_fill_continuous(low = "white", high = "red", name = "Deaths", 
+                        label = scales::comma) +
+  labs(title = "Washington COVID-19 Deaths", 
+       subtitle = "5/1/2020 - 7/31/2020") +
   theme(legend.position = "right")
 
-usmap::plot_usmap(data = wadeathc, values = "ALWAYS", "counties", include = c("WA"), color = "black")+
-  scale_fill_continuous(low = "white", high = "blue", name = "Mask Use", label = scales::comma) +
-  labs(title = "Washington COVID-19 Mask Use", subtitle = "Survey from June 2020") +
+usmap::plot_usmap(data = wadeathc, values = "ALWAYS", "counties", 
+                  include = c("WA"), color = "black")+
+  scale_fill_continuous(low = "white", high = "blue", 
+                        name = "Always use mask", label = scales::comma) +
+  labs(title = "Washington COVID-19 Mask Use", 
+       subtitle = "Survey from June 2020") +
   theme(legend.position = "right")
 
-usmap::plot_usmap(data = wadeathc, values = "SOMETIMES", "counties", include = c("WA"), color = "black")+
-  scale_fill_continuous(low = "white", high = "orange", name = "Mask Use", label = scales::comma) +
-  labs(title = "Washington COVID-19 Mask Use", subtitle = "Survey from June 2020") +
+usmap::plot_usmap(data = wadeathc, values = "SOMETIMES", "counties", 
+                  include = c("WA"), color = "black")+
+  scale_fill_continuous(low = "white", high = "orange", 
+                        name = "Sometimes use mask", label = scales::comma) +
+  labs(title = "Washington COVID-19 Mask Use", 
+       subtitle = "Survey from June 2020") +
   theme(legend.position = "right")
 
-usmap::plot_usmap(data = wadeathc, values = "deaths.per.case", "counties", include = c("WA"), color = "black")+
-  scale_fill_continuous(low = "green", high = "red", name = "Mask Use", label = scales::comma) +
-  labs(title = "Washington COVID-19 Deaths per Case", subtitle = "From 5/1/2020 to 7/31/2020") +
+usmap::plot_usmap(data = wadeathc, values = "deaths.per.case", "counties", 
+                  include = c("WA"), color = "black")+
+  scale_fill_gradient2(low=("blue"), mid="white", high=("red"),
+                       name = "Deaths per Case", label = scales::comma) +
+  labs(title = "Washington COVID-19 Deaths per Case", 
+       subtitle = "From 5/1/2020 to 7/31/2020") +
   theme(legend.position = "right")
                
 ```
